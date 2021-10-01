@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  cpf           String
+  rg            String
+  phone         String
+  date_birthday String
+  zipcode       String
+  street        String
+  street_number String
+  neighborhood  String
+  city          String
+  state         String
+  avatar        File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  fileId        String?  @map(name: "avatar_id")
+  createdAt     DateTime @default(now()) @map(name: "created_at")
+  updatedAt     DateTime @updatedAt @map(name: "updated_at")
+
+  Checkout    Checkout[]
+  Transaction Transaction[]
+  @@map(name: "users")
+}
+
+model File {
+  id        String   @id @default(uuid())
+  name      String
+  path      String   @unique
+  url       String
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  User    User[]
+  Product Product[]
+
+  @@map(name: "files")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  amount      Int
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  String   @map(name: "category_id")
+  image       File     @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  fileId      String   @map(name: "image_id")
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  CheckoutProduct CheckoutProduct[]
+  @@map(name: "products")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  Product Product[]
+  @@map(name: "categories")
+}
+
+model Checkout {
+  id        String   @id @default(uuid())
+  amount    Int
+  fee       Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  Transaction     Transaction[]
+  CheckoutProduct CheckoutProduct[]
+  @@map(name: "checkouts")
+}
+
+model Transaction {
+  id                 String   @id @default(uuid())
+  transaction_id     String
+  status             String
+  authorization_code String
+  brand              String
+  authorized_amount  String
+  tid                String
+  installments       String
+  checkout           Checkout @relation(fields: [checkoutId], references: [id])
+  checkoutId         String   @map(name: "checkout_id")
+  user               User     @relation(fields: [userId], references: [id])
+  userId             String   @map("user_id")
+  createdAt          DateTime @default(now()) @map(name: "created_at")
+  updatedAt          DateTime @updatedAt @map(name: "updated_at")
+
+  @@map(name: "transactions")
+}
+
+model CheckoutProduct {
+  id         String   @id @default(uuid())
+  checkout   Checkout @relation(fields: [checkoutId], references: [id])
+  checkoutId String   @map(name: "checkout_id")
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String   @map(name: "product_id")
+  amount     Int
+  total      Int
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+
+
+  @@map(name: "checkout_products")
+}
